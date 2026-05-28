@@ -190,23 +190,28 @@ def open_cd(cd):
 
     push_history()
 
+# =========================================================
+# TRACK NUMBER
+# =========================================================
+
 def extract_track_number(title):
 
     if not title:
-        return 999
+        return 9999
 
     title = str(title).strip()
 
     patterns = [
-        r"^(\d{1,2})\s*-\s*",
-        r"^(\d{1,2})\.",
-        r"^(\d{1,2})\s",
-        r"^(\d{1,2})$"
+        r"^\s*(\d{1,3})\s*-\s*",
+        r"^\s*(\d{1,3})\.",
+        r"^\s*(\d{1,3})\s+",
+        r"^track\s*(\d{1,3})",
+        r"^(\d{1,3})$"
     ]
 
     for pattern in patterns:
 
-        match = re.match(
+        match = re.search(
             pattern,
             title,
             re.IGNORECASE
@@ -219,16 +224,20 @@ def extract_track_number(title):
             except:
                 pass
 
-    return 999
+    return 9999
 
 def track_display(title):
 
     n = extract_track_number(title)
 
-    if n == 999:
+    if n == 9999:
         return ""
 
     return str(n)
+
+# =========================================================
+# TIME
+# =========================================================
 
 def time_to_seconds(t):
 
@@ -267,9 +276,9 @@ def render_results(df):
         by=[
             "artist",
             "album",
-            "track_order",
-            "title"
-        ]
+            "track_order"
+        ],
+        kind="stable"
     )
 
     header = st.columns([3,3,1,5,1,1])
@@ -298,7 +307,8 @@ def render_results(df):
             st.markdown(
                 f"""
                 <div class="album-total">
-                ⏱ Total album time: {seconds_to_time(album_seconds)}
+                ⏱ Total album time:
+                {seconds_to_time(album_seconds)}
                 </div>
                 """,
                 unsafe_allow_html=True
@@ -331,9 +341,7 @@ def render_results(df):
                 row["artist"],
                 key=f"artist_{idx}"
             ):
-                open_artist(
-                    row["artist"]
-                )
+                open_artist(row["artist"])
                 st.rerun()
 
         with cols[1]:
@@ -357,13 +365,8 @@ def render_results(df):
             unsafe_allow_html=True
         )
 
-        cols[3].write(
-            row["title"]
-        )
-
-        cols[4].write(
-            row["duration"]
-        )
+        cols[3].write(row["title"])
+        cols[4].write(row["duration"])
 
         with cols[5]:
 
@@ -379,7 +382,8 @@ def render_results(df):
     st.markdown(
         f"""
         <div class="album-total">
-        ⏱ Total album time: {seconds_to_time(album_seconds)}
+        ⏱ Total album time:
+        {seconds_to_time(album_seconds)}
         </div>
         """,
         unsafe_allow_html=True
@@ -410,9 +414,7 @@ with st.sidebar:
         st.session_state.view = "artists"
         st.rerun()
 
-search = st.sidebar.text_input(
-    "Search"
-)
+search = st.sidebar.text_input("Search")
 
 if st.sidebar.button("⬅ Back"):
     go_back()
@@ -638,7 +640,6 @@ elif st.session_state.view == "album":
     album = st.session_state.album
 
     st.title(f"💿 {album}")
-
     st.caption(artist)
 
     query = """
